@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>PoE - residência@JF</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" type="text/css"
+    href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+  <script type="text/javascript" src="//code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" type="text/css"
+    href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+
+  <script language="javascript" type="text/javascript"
+    src="https://cdn.jsdelivr.net/npm/web3@1.2.6/dist/web3.min.js"></script>
+  <script language="javascript" type="text/javascript" src="abi.js"></script>
+
+  <style id="compiled-css" type="text/css">
+    .file-upload input[type='file'] {
+      display: none;
+    }
+
+    body {
+      background: #00B4DB;
+      background: -webkit-linear-gradient(to right, #0083B0, #00B4DB);
+      background: linear-gradient(to right, #0083B0, #00B4DB);
+      height: 100vh;
+    }
+
+    .rounded-lg {
+      border-radius: 1rem;
+    }
+
+    .custom-file-label.rounded-pill {
+      border-radius: 50rem;
+    }
+
+    .custom-file-label.rounded-pill::after {
+      border-radius: 0 50rem 50rem 0;
+    }
+
+    .custom-file-input~.custom-file-label::after {
+      content: "Abrir";
+    }
+  </style>
+
+  <script type="text/javascript">//<![CDATA[
+
+    function addCell(tr, val) {
+      var td = document.createElement('td');
+
+      td.innerHTML = val;
+
+      tr.appendChild(td)
+    }
+
+
+    function addRow(tbl, val_1, val_2, val_3) {
+      var tr = document.createElement('tr');
+
+      addCell(tr, val_1);
+      addCell(tr, val_2);
+      addCell(tr, val_3);
+
+      tbl.appendChild(tr)
+    }
+
+    function generateTableHead(table, val1, val2, val3) {
+      let thead = table.createTHead();
+      let row = thead.insertRow();
+
+      let th = document.createElement("th");
+      let text = document.createTextNode(val1);
+      th.appendChild(text);
+      row.appendChild(th);
+
+      th = document.createElement("th");
+      text = document.createTextNode(val2);
+      th.appendChild(text);
+      row.appendChild(th);
+
+      th = document.createElement("th");
+      text = document.createTextNode(val3);
+      th.appendChild(text);
+      row.appendChild(th);
+
+    }
+
+    function loadTable(events) {
+      tbl = document.getElementById('tbl');
+      $("#tbl tr").remove();
+      generateTableHead(tbl, "Hash", "Nome", "Timestamp");
+      for (let element of events) {
+        addRow(tbl, element.returnValues[1], element.returnValues[0], convert(element.returnValues[2]));
+      }
+    }
+
+
+    window.onload = function () {
+
+    }
+
+    var userAccount;
+    var acc;
+
+    function convert(date) {
+
+      // Unixtimestamp
+      var unixtimestamp = date;//document.getElementById('timestamp').value;
+
+      // Months array
+      var months_arr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      // Convert timestamp to milliseconds
+      var date = new Date(unixtimestamp * 1000);
+
+      // Year
+      var year = date.getFullYear();
+
+      // Month
+      var month = months_arr[date.getMonth()];
+
+      // Day
+      var day = date.getDate();
+
+      // Hours
+      var hours = date.getHours();
+
+      // Minutes
+      var minutes = "0" + date.getMinutes();
+
+      // Seconds
+      var seconds = "0" + date.getSeconds();
+
+      // Display date time in MM-dd-yyyy h:m:s format
+      var convdataTime = month + '-' + day + '-' + year + ' ' + hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+
+
+      return convdataTime;
+      //document.getElementById('datetime').innerHTML = convdataTime;
+
+    }
+
+    function startApp() {
+      var poeAddress = "0x190694e1321ab3E62f5Bb85Ec594BeefeC355465";
+      poe = new web3.eth.Contract(abi, poeAddress);
+
+      var accountInterval = setInterval(function () {
+
+        web3.eth.getAccounts().then(function (result) {
+          acc = result[0];
+        })
+
+        if (acc !== userAccount) {
+          userAccount = acc;
+          refreshData();
+        }
+      }, 100);
+
+    }
+
+    function refreshData() {
+      const filter = { fromBlock: 0, toBlock: 'latest' };
+      //const events = web3.eth.getPastLogs({}).then((result) => console.log(result));
+      const evs = poe.getPastEvents('Insert_Data', filter).then((result) => { console.log(result); loadTable(result) });
+    }
+
+    function refreshDataFromHash(result) {
+      //document.getElementById("total-rifas").innerHTML = result;
+    }
+
+    function verifyHash() {
+      poe.methods.doesProofExist(docId, "0x" + documentHash).call().then(refreshDataFromHash(result));
+    }
+
+    function verify_Data(documentHash) {
+      poe.methods.verify_Data("0x" + document.getElementById("inputHash").value).call().then((result) => console.log(result));
+      poe.methods.read_Data("0x" + document.getElementById("inputHash").value).call().then((result) => updateTable(result));
+    }
+
+    function updateTable(result) {
+      document.getElementById("nomeid").innerHTML = result[0];
+      document.getElementById("hashid").innerHTML = result[1];
+      document.getElementById("timeid").innerHTML = convert(result[2]);
+      document.getElementById("donoid").innerHTML = result[3];
+    }
+
+    function notarizeHash() {
+      var reader = new FileReader();
+      var file = $("#customFile")[0].files[0];
+      if (!file) {
+        alert("Nenhum arquivo foi selecionado.");
+        return;
+      }
+
+      var documentHash;
+
+      reader.onload = function (f) {
+        var file_result = this.result;
+        var file_wordArr = CryptoJS.lib.WordArray.create(file_result);
+        var sha2_hash = CryptoJS.SHA256(file_wordArr);
+        documentHash = sha2_hash.toString()
+        console.log("SHA256 calculado:" + documentHash);
+        //docId = 7;
+        poe.methods.write_Data(document.getElementById("inputName").value, "0x" + documentHash).send({ from: userAccount }).then(refreshData);
+      };
+      reader.readAsArrayBuffer(file);
+
+      //var quant = document.getElementById("quantidade").value;
+      //var preco = 100000000000000000 * quant;
+
+
+    }
+
+    // Padrão para detectar um web3 injetado.
+    window.addEventListener('load', function () {
+
+      web3Provider = null;
+      // Modern dapp browsers...
+      if (window.ethereum) {
+        web3Provider = window.ethereum;
+        try {
+          // Request account access
+          window.ethereum.enable();
+        } catch (error) {
+          // User denied account access...
+          console.error("User denied account access")
+        }
+      }
+      // Legacy dapp browsers...
+      else if (window.web3) {
+        web3Provider = window.web3.currentProvider;
+      }
+      // If no injected web3 instance is detected, fall back to Ganache
+      else {
+        console.log('No web3? You should consider trying MetaMask!')
+        web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
+      }
+      web3 = new Web3(web3Provider);
+      startApp()
+
+    })
+
+  //]]></script>
+
+</head>
+
+<body>
+  <section>
+    <div class="container p-5">
+      <div class="row mb-5 text-center text-white">
+        <div class="col-lg-10 mx-auto">
+          <h1 class="display-4">Proof-of-Existence</h1>
+          <p class="lead">residência<b>@</b>jf</p>
+        </div>
+      </div>
+
+
+      <div class="row">
+        <div class="col-lg-12 mx-auto">
+          <div class="p-5 bg-white shadow rounded-lg"><img
+              src="https://res.cloudinary.com/mhmd/image/upload/v1557366994/img_epm3iz.png" alt="" width="200"
+              class="d-block mx-auto mb-4 rounded-pill">
+
+            <h6 class="text-center mb-2 text-muted">
+              Faça o registro de seu ativo digital aqui!
+            </h6>
+
+            <div class="overflow-hidden rounded-pill mb-2">
+              <input id="inputName" type="text" class="form-control">
+            </div>
+
+            <div class="custom-file overflow-hidden rounded-pill mb-2">
+
+              <input id="customFile" type="file" class="custom-file-input rounded-pill">
+              <label for="customFile" class="custom-file-label rounded-pill"></label>
+            </div>
+
+            <button id="btn" type="button" class="btn btn-outline-primary rounded-pill btn-block"
+              onclick="notarizeHash()">Proof-of-Existence</button>
+
+          </div>
+        </div>
+
+      </div>
+
+      <br><br>
+
+      <div class="row">
+        <div class="col-lg-12 mx-auto">
+          <div class="p-5 bg-white shadow rounded-lg">
+
+            <table class="table small" id="tbl">
+
+            </table>
+
+            <div class="overflow-hidden rounded-pill mb-2">
+              <input id="inputHash" type="text" class="form-control">
+            </div>
+
+            <button id="btn" type="button" class="btn btn-outline-primary rounded-pill btn-block"
+              onclick="verify_Data()">Conferir Hash!</button>
+            <br>
+              <ul class="list-group mb-3">
+                <li class="list-group-item d-flex justify-content-between lh-condensed">
+                    <div>
+                        <h6 class="my-0">Nome</h6>
+                    </div>
+                    <span id="nomeid" class="text-muted"></span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between lh-condensed">
+                    <div>
+                        <h6 class="my-0">Hash</h6>
+                    </div>
+                    <span class="text-muted" id="hashid"></span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between lh-condensed">
+                    <div>
+                        <h6 class="my-0">Timestamp</h6>
+                    </div>
+                    <span class="text-muted" id="timeid"></span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <h6 class="my-0">Dono</h6>
+                    <span class="text-muted" id="donoid"></span>
+                </li>
+            </ul>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    </div>
+
+  </section>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.min.js"></script>
+  <script>
+    bsCustomFileInput.init()
+  </script>
+</body>
+
+</html>
